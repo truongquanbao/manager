@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        getUserData().role == 'Super Admin' || 
+        (request.auth.token.email == 'baotruong1109@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+    
+    function isManager() {
+      return isAuthenticated() && getUserData().role == 'Manager';
+    }
+    
+    function isResident() {
+      return isAuthenticated() && getUserData().role == 'Resident';
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin() || isManager());
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // Apartments
+    match /apartments/{apartmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isManager();
+    }
+    
+    // Residents
+    match /residents/{residentId} {
+      allow read: if isAuthenticated() && (isAdmin() || isManager() || request.auth.uid == resource.data.userId);
+      allow write: if isAdmin() || isManager();
+    }
+    
+    // Invoices
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && (isAdmin() || isManager() || request.auth.uid == resource.data.userId);
+      allow write: if isAdmin() || isManager();
+    }
+    
+    // Complaints
+    match /complaints/{complaintId} {
+      allow read: if isAuthenticated() && (isAdmin() || isManager() || request.auth.uid == resource.data.userId);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || isManager() || 
+        (isAuthenticated() && request.auth.uid == resource.data.userId && 
+          (resource.data.status == 'New' || 
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'lastMessageTime'])));
+      allow delete: if isAdmin() || isManager() || (isAuthenticated() && request.auth.uid == resource.data.userId && resource.data.status == 'New');
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (isAdmin() || isManager() || request.auth.uid == get(/databases/$(database)/documents/complaints/$(complaintId)).data.userId);
+        allow create: if isAuthenticated() && (isAdmin() || isManager() || request.auth.uid == get(/databases/$(database)/documents/complaints/$(complaintId)).data.userId);
+      }
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() || isManager();
+      allow update: if isAdmin() || isManager();
+      allow delete: if isAdmin();
+    }
+
+    // System Config
+    match /system/{documentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Service Categories
+    match /service_categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isManager();
+    }
+  }
+}

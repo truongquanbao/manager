@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "System users (Super Admin, Manager, Resident)",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["Super Admin", "Manager", "Resident"] },
+        "status": { "type": "string", "enum": ["Active", "Pending", "Rejected", "Locked"] },
+        "isApproved": { "type": "boolean" },
+        "apartmentId": { "type": "string" }
+      },
+      "required": ["username", "fullName", "email", "role"]
+    },
+    "apartments": {
+      "title": "Apartment",
+      "description": "Apartment units in the building",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "building": { "type": "string" },
+        "block": { "type": "string" },
+        "floor": { "type": "integer" },
+        "area": { "type": "number" },
+        "type": { "type": "string" },
+        "status": { "type": "string", "enum": ["Empty", "Occupied", "Rented", "Maintenance"] },
+        "maxResidents": { "type": "integer" }
+      },
+      "required": ["code", "floor", "area"]
+    },
+    "residents": {
+      "title": "Resident",
+      "description": "Information about residents",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "cccd": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "apartmentId": { "type": "string" },
+        "residentType": { "type": "string", "enum": ["Owner", "Tenant", "Member"] },
+        "status": { "type": "string" }
+      },
+      "required": ["fullName", "cccd", "apartmentId"]
+    },
+    "invoices": {
+      "title": "Invoice",
+      "description": "Monthly service fee invoices",
+      "type": "object",
+      "properties": {
+        "apartmentId": { "type": "string" },
+        "month": { "type": "integer" },
+        "year": { "type": "integer" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Unpaid", "Paid"] },
+        "createdDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["apartmentId", "month", "year", "totalAmount"]
+    },
+    "complaints": {
+      "title": "Complaint",
+      "description": "Resident feedback and complaints",
+      "type": "object",
+      "properties": {
+        "residentId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "priority": { "type": "string", "enum": ["High", "Normal", "Low"] },
+        "status": { "type": "string", "enum": ["New", "Processing", "Resolved", "Closed"] },
+        "createdDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["residentId", "title", "content"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profiles"
+    },
+    "/apartments/{apartmentId}": {
+      "schema": "apartments",
+      "description": "Apartment units"
+    },
+    "/residents/{residentId}": {
+      "schema": "residents",
+      "description": "Resident details"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "invoices",
+      "description": "Fee invoices"
+    },
+    "/complaints/{complaintId}": {
+      "schema": "complaints",
+      "description": "Resident complaints"
+    }
+  }
+}

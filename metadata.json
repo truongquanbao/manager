@@ -1,0 +1,9 @@
+{
+  "name": "Apartment Manager Pro",
+  "description": "Hệ thống quản lý chung cư chuyên nghiệp với phân quyền 3 cấp: Super Admin, Quản lý và Cư dân. Hỗ trợ quản lý căn hộ, cư dân, hóa đơn, phản ánh và thông báo.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
